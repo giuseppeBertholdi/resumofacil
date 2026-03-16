@@ -1,12 +1,28 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUserFromRequest } from "@/lib/server/supabaseAuth";
 
+function normalizeBaseUrl(urlLike: string) {
+  const withProtocol = /^https?:\/\//i.test(urlLike) ? urlLike : `https://${urlLike}`;
+  return withProtocol.replace(/\/+$/, "");
+}
+
+function appendTokenToNotificationUrl(notificationUrl: string, token?: string) {
+  if (!token) {
+    return notificationUrl;
+  }
+
+  const separator = notificationUrl.includes("?") ? "&" : "?";
+  return `${notificationUrl}${separator}token=${encodeURIComponent(token)}`;
+}
+
 export async function POST(request: Request) {
   const user = await getAuthenticatedUserFromRequest(request);
   const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
   const notificationUrl = process.env.MERCADO_PAGO_NOTIFICATION_URL;
+  const notificationToken = process.env.MERCADO_PAGO_NOTIFICATION_TOKEN;
   const requestOrigin = request.headers.get("origin");
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || requestOrigin || new URL(request.url).origin;
+  const appUrlRaw = process.env.NEXT_PUBLIC_APP_URL || requestOrigin || new URL(request.url).origin;
+  const appUrl = normalizeBaseUrl(appUrlRaw);
   const canUseAutoReturn = appUrl.startsWith("https://") && !appUrl.includes("localhost");
 
   if (!user) {
@@ -47,7 +63,11 @@ export async function POST(request: Request) {
       failure: `${appUrl}/pagamento/falhou`,
     },
     ...(canUseAutoReturn ? { auto_return: "approved" } : {}),
-    ...(notificationUrl ? { notification_url: notificationUrl } : {}),
+    ...(notificationUrl
+      ? {
+          notification_url: appendTokenToNotificationUrl(notificationUrl, notificationToken),
+        }
+      : {}),
   };
 
   const mercadoPagoResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
