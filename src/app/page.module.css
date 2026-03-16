@@ -1,0 +1,348 @@
+.page {
+  min-height: 100vh;
+  padding: 28px 16px 44px;
+  background: radial-gradient(circle at top, #f8fbff 0%, #eef4ff 28%, #f8fafc 100%);
+  color: #0f172a;
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+.center {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1080px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+.salesCard,
+.bookPanel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+}
+
+.salesCard {
+  padding: 26px;
+  min-width: 0;
+}
+
+.badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: #e0ecff;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.title {
+  margin-top: 10px;
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin-top: 12px;
+  color: #475569;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.priceWrap {
+  margin-top: 16px;
+  border-radius: 12px;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  padding: 14px;
+  display: grid;
+}
+
+.priceWrap strong {
+  font-size: 33px;
+  color: #1e3a8a;
+}
+
+.priceWrap span {
+  color: #334155;
+  font-size: 14px;
+}
+
+.modeSelector {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.modeButton,
+.modeActive {
+  border-radius: 10px;
+  padding: 9px 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.modeActive {
+  border-color: #2563eb;
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+.bigInput {
+  width: 100%;
+  margin-top: 14px;
+  border-radius: 14px;
+  border: 1px solid #cbd5e1;
+  min-height: 220px;
+  resize: vertical;
+  font: inherit;
+  font-size: 18px;
+  line-height: 1.45;
+  padding: 16px;
+  outline: none;
+}
+
+.bigInput:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.mainActions {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.askButton,
+.payButton,
+.checkButton,
+.loginButton {
+  border: 0;
+  border-radius: 12px;
+  padding: 13px 16px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.askButton {
+  background: #0f172a;
+  color: #fff;
+}
+
+.payButton {
+  background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+  color: #fff;
+}
+
+.loginButton {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.checkButton {
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+}
+
+.askButton:hover,
+.payButton:hover,
+.checkButton:hover,
+.loginButton:hover {
+  transform: translateY(-1px);
+  opacity: 0.97;
+}
+
+.authRow {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.email {
+  font-size: 14px;
+  color: #334155;
+}
+
+.accessStatus {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #334155;
+}
+
+.feedback {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #0f766e;
+}
+
+.answerBox {
+  margin-top: 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 14px;
+}
+
+.answerBox h2 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.answerBox p {
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.markdown {
+  color: #0f172a;
+  line-height: 1.6;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3 {
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+.markdown ul,
+.markdown ol {
+  padding-left: 20px;
+  margin-top: 6px;
+  margin-bottom: 8px;
+}
+
+.markdown p + p {
+  margin-top: 8px;
+}
+
+.criteriaBox {
+  margin-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 14px;
+  text-align: left;
+}
+
+.criteriaBox h3 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.criteriaBox ul {
+  list-style: none;
+  display: grid;
+  gap: 7px;
+}
+
+.criteriaBox li {
+  border-left: 4px solid #2563eb;
+  border-radius: 8px;
+  background: #eff6ff;
+  padding: 8px 10px;
+  color: #1e3a8a;
+  font-size: 14px;
+}
+
+.bookPanel {
+  padding: 18px;
+  text-align: center;
+  position: sticky;
+  top: 20px;
+}
+
+.bookImage {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.bookPanel p {
+  margin-top: 10px;
+  color: #475569;
+  font-size: 14px;
+}
+
+@media (max-width: 980px) {
+  .center {
+    grid-template-columns: 1fr;
+  }
+
+  .bookPanel {
+    position: static;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .title {
+    font-size: 34px;
+  }
+
+  .salesCard {
+    padding: 20px;
+  }
+
+  .bigInput {
+    min-height: 180px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 16px 10px 28px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .subtitle {
+    font-size: 15px;
+  }
+
+  .priceWrap strong {
+    font-size: 28px;
+  }
+
+  .mainActions {
+    gap: 8px;
+  }
+
+  .askButton,
+  .payButton,
+  .loginButton {
+    width: 100%;
+    padding: 12px 14px;
+  }
+
+  .modeSelector {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .modeButton,
+  .modeActive {
+    width: 100%;
+    text-align: center;
+    padding: 10px 6px;
+    font-size: 13px;
+  }
+
+  .criteriaBox li {
+    font-size: 13px;
+  }
+}

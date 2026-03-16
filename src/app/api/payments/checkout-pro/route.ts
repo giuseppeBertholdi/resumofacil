@@ -1,0 +1,81 @@
+import { NextResponse } from "next/server";
+import { getAuthenticatedUserFromRequest } from "@/lib/server/supabaseAuth";
+
+export async function POST(request: Request) {
+  const user = await getAuthenticatedUserFromRequest(request);
+  const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+  const notificationUrl = process.env.MERCADO_PAGO_NOTIFICATION_URL;
+  const requestOrigin = request.headers.get("origin");
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || requestOrigin || new URL(request.url).origin;
+  const canUseAutoReturn = appUrl.startsWith("https://") && !appUrl.includes("localhost");
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "Faca login com Google antes de iniciar o pagamento." },
+      { status: 401 },
+    );
+  }
+
+  if (!accessToken) {
+    return NextResponse.json(
+      {
+        error:
+          "MERCADO_PAGO_ACCESS_TOKEN nao configurado. Adicione no .env para ativar o Checkout Pro.",
+      },
+      { status: 500 },
+    );
+  }
+
+  const payload = {
+    items: [
+      {
+        id: "acesso-historia-1a-serie",
+        title: "Acesso IA Historia 1a serie + criterios da prova",
+        description: "Acesso premium mensal para perguntas, resumos e exercicios.",
+        quantity: 1,
+        currency_id: "BRL",
+        unit_price: 4.99,
+      },
+    ],
+    payer: {
+      email: user.email,
+    },
+    external_reference: `premium-${user.id}`,
+    back_urls: {
+      success: `${appUrl}/pagamento/sucesso`,
+      pending: `${appUrl}/pagamento/pendente`,
+      failure: `${appUrl}/pagamento/falhou`,
+    },
+    ...(canUseAutoReturn ? { auto_return: "approved" } : {}),
+    ...(notificationUrl ? { notification_url: notificationUrl } : {}),
+  };
+
+  const mercadoPagoResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "X-Idempotency-Key": crypto.randomUUID(),
+    },
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+
+  const data = await mercadoPagoResponse.json();
+
+  if (!mercadoPagoResponse.ok) {
+    return NextResponse.json(
+      {
+        error: "Nao foi possivel criar a preferencia no Checkout Pro.",
+        details: data,
+      },
+      { status: mercadoPagoResponse.status },
+    );
+  }
+
+  return NextResponse.json({
+    preferenceId: data.id,
+    checkoutUrl: data.init_point ?? null,
+    sandboxCheckoutUrl: data.sandbox_init_point ?? null,
+  });
+}
