@@ -62,6 +62,16 @@ export async function POST(request: Request) {
       pending: `${appUrl}/pagamento/pendente`,
       failure: `${appUrl}/pagamento/falhou`,
     },
+    payment_methods: {
+      default_payment_method_id: "pix",
+      installments: 1,
+      excluded_payment_types: [
+        { id: "credit_card" },
+        { id: "debit_card" },
+        { id: "ticket" },
+        { id: "atm" },
+      ],
+    },
     ...(canUseAutoReturn ? { auto_return: "approved" } : {}),
     ...(notificationUrl
       ? {
