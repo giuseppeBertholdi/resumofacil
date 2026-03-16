@@ -8,7 +8,6 @@ type MercadoPagoSearchResponse = {
 };
 
 export async function hasApprovedPixAccess(input: {
-  email: string;
   externalReference: string;
 }): Promise<boolean> {
   const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
@@ -19,7 +18,7 @@ export async function hasApprovedPixAccess(input: {
 
   const params = new URLSearchParams({
     status: "approved",
-    "payer.email": input.email,
+    external_reference: input.externalReference,
     sort: "date_created",
     criteria: "desc",
     limit: "20",

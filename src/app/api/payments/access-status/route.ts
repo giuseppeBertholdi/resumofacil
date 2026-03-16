@@ -10,7 +10,6 @@ export async function GET(request: Request) {
   }
 
   const hasAccess = await hasApprovedPixAccess({
-    email: user.email,
     externalReference: `premium-${user.id}`,
   });
 
