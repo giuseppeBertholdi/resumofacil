@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUserFromRequest } from "@/lib/server/supabaseAuth";
 
-function normalizeBaseUrl(urlLike: string) {
-  const withProtocol = /^https?:\/\//i.test(urlLike) ? urlLike : `https://${urlLike}`;
-  return withProtocol.replace(/\/+$/, "");
-}
-
 function appendTokenToNotificationUrl(notificationUrl: string, token?: string) {
   if (!token) {
     return notificationUrl;
@@ -20,10 +15,6 @@ export async function POST(request: Request) {
   const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
   const notificationUrl = process.env.MERCADO_PAGO_NOTIFICATION_URL;
   const notificationToken = process.env.MERCADO_PAGO_NOTIFICATION_TOKEN;
-  const requestOrigin = request.headers.get("origin");
-  const appUrlRaw = process.env.NEXT_PUBLIC_APP_URL || requestOrigin || new URL(request.url).origin;
-  const appUrl = normalizeBaseUrl(appUrlRaw);
-  const canUseAutoReturn = appUrl.startsWith("https://") && !appUrl.includes("localhost");
 
   if (!user) {
     return NextResponse.json(
@@ -43,35 +34,13 @@ export async function POST(request: Request) {
   }
 
   const payload = {
-    items: [
-      {
-        id: "acesso-historia-1a-serie",
-        title: "Acesso IA Historia 1a serie + criterios da prova",
-        description: "Acesso premium mensal para perguntas, resumos e exercicios.",
-        quantity: 1,
-        currency_id: "BRL",
-        unit_price: 4.99,
-      },
-    ],
+    transaction_amount: 4.99,
+    description: "Acesso IA Historia 1a serie + criterios da prova",
+    payment_method_id: "pix",
     payer: {
       email: user.email,
     },
     external_reference: `premium-${user.id}`,
-    back_urls: {
-      success: `${appUrl}/pagamento/sucesso`,
-      pending: `${appUrl}/pagamento/pendente`,
-      failure: `${appUrl}/pagamento/falhou`,
-    },
-    payment_methods: {
-      installments: 1,
-      excluded_payment_types: [
-        { id: "credit_card" },
-        { id: "debit_card" },
-        { id: "ticket" },
-        { id: "atm" },
-      ],
-    },
-    ...(canUseAutoReturn ? { auto_return: "approved" } : {}),
     ...(notificationUrl
       ? {
           notification_url: appendTokenToNotificationUrl(notificationUrl, notificationToken),
@@ -79,7 +48,7 @@ export async function POST(request: Request) {
       : {}),
   };
 
-  const mercadoPagoResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
+  const mercadoPagoResponse = await fetch("https://api.mercadopago.com/v1/payments", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -95,7 +64,7 @@ export async function POST(request: Request) {
   if (!mercadoPagoResponse.ok) {
     return NextResponse.json(
       {
-        error: "Nao foi possivel criar a preferencia no Checkout Pro.",
+        error: "Nao foi possivel gerar o PIX no Mercado Pago.",
         details: data,
       },
       { status: mercadoPagoResponse.status },
@@ -103,8 +72,10 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({
-    preferenceId: data.id,
-    checkoutUrl: data.init_point ?? null,
-    sandboxCheckoutUrl: data.sandbox_init_point ?? null,
+    paymentId: data.id,
+    status: data.status,
+    qrCode: data.point_of_interaction?.transaction_data?.qr_code ?? null,
+    qrCodeBase64: data.point_of_interaction?.transaction_data?.qr_code_base64 ?? null,
+    ticketUrl: data.point_of_interaction?.transaction_data?.ticket_url ?? null,
   });
 }

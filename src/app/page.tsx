@@ -6,10 +6,12 @@ import { supabase } from "@/lib/supabaseClient";
 import { criteriosGregosAntigos } from "@/lib/criteria";
 import styles from "./page.module.css";
 
-type CheckoutResponse = {
-  preferenceId?: string;
-  checkoutUrl?: string | null;
-  sandboxCheckoutUrl?: string | null;
+type PixResponse = {
+  paymentId?: string | number;
+  status?: string;
+  qrCode?: string | null;
+  qrCodeBase64?: string | null;
+  ticketUrl?: string | null;
   error?: string;
 };
 
@@ -53,8 +55,9 @@ export default function Home() {
   const [userEmail, setUserEmail] = useState<string>("");
   const [accessToken, setAccessToken] = useState<string>("");
   const [hasPremiumAccess, setHasPremiumAccess] = useState(false);
+  const [pixData, setPixData] = useState<PixResponse | null>(null);
   const [isCheckingAccess, setIsCheckingAccess] = useState(false);
-  const [isLoadingCheckout, setIsLoadingCheckout] = useState(false);
+  const [isLoadingPix, setIsLoadingPix] = useState(false);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
   const [assistantMode, setAssistantMode] = useState<AssistantMode>("pergunta");
   const [prompt, setPrompt] = useState("");
@@ -160,7 +163,7 @@ export default function Home() {
       return;
     }
 
-    void handleCheckoutPro();
+    void handleGeneratePix();
     params.delete("autoPay");
     const nextQuery = params.toString();
     const cleanUrl = nextQuery ? `${window.location.pathname}?${nextQuery}` : window.location.pathname;
@@ -173,17 +176,18 @@ export default function Home() {
       return;
     }
 
-    await handleCheckoutPro();
+    await handleGeneratePix();
   };
 
-  const handleCheckoutPro = async () => {
+  const handleGeneratePix = async () => {
     if (!accessToken) {
       setFeedback("Faca login com Google antes de pagar.");
       return;
     }
 
     setFeedback("");
-    setIsLoadingCheckout(true);
+    setPixData(null);
+    setIsLoadingPix(true);
 
     try {
       const response = await fetch("/api/payments/checkout-pro", {
@@ -194,26 +198,24 @@ export default function Home() {
         },
       });
 
-      const result = (await response.json()) as CheckoutResponse;
+      const result = (await response.json()) as PixResponse;
 
       if (!response.ok) {
-        setFeedback(result.error ?? "Nao foi possivel iniciar o Checkout Pro.");
+        setFeedback(result.error ?? "Nao foi possivel gerar o PIX.");
         return;
       }
 
-      const checkoutUrl = result.checkoutUrl || result.sandboxCheckoutUrl;
-
-      if (!checkoutUrl) {
-        setFeedback("Preferencia criada, mas nao recebi URL do Checkout Pro.");
+      if (!result.qrCodeBase64 || !result.qrCode) {
+        setFeedback("PIX gerado sem QR completo. Tente novamente.");
         return;
       }
 
-      setFeedback("Redirecionando para o Checkout Pro...");
-      window.location.href = checkoutUrl;
+      setPixData(result);
+      setFeedback("PIX gerado. Escaneie o QR ou copie o codigo.");
     } catch {
-      setFeedback("Falha de conexao ao iniciar o Checkout Pro.");
+      setFeedback("Falha de conexao ao gerar o PIX.");
     } finally {
-      setIsLoadingCheckout(false);
+      setIsLoadingPix(false);
     }
   };
 
@@ -344,7 +346,7 @@ export default function Home() {
           <div className={styles.mainActions}>
             {!isLoggedIn ? (
               <button onClick={handlePayButtonClick} className={styles.payButton} type="button">
-                {isLoadingCheckout ? "Preparando pagamento..." : "Pagar R$ 4,99"}
+                {isLoadingPix ? "Gerando PIX..." : "Pagar R$ 4,99"}
               </button>
             ) : (
               <>
@@ -352,7 +354,7 @@ export default function Home() {
                   {isLoadingAi ? "Gerando resposta..." : "Gerar com IA"}
                 </button>
                 <button onClick={handlePayButtonClick} className={styles.payButton} type="button">
-              {isLoadingCheckout ? "Abrindo pagamento..." : "Pagar R$ 4,99 (PIX no Checkout Pro)"}
+              {isLoadingPix ? "Gerando PIX..." : "Gerar PIX R$ 4,99"}
                 </button>
                 <button onClick={handleCheckAccess} className={styles.checkButton} type="button">
                   {isCheckingAccess ? "Verificando..." : "Ja paguei: verificar acesso"}
@@ -377,6 +379,37 @@ export default function Home() {
                 // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(answer) }}
               />
+            </article>
+          )}
+
+          {pixData?.qrCodeBase64 && (
+            <article className={styles.pixBox}>
+              <h2>Pague com PIX</h2>
+              <Image
+                src={`data:image/png;base64,${pixData.qrCodeBase64}`}
+                alt="QR Code PIX"
+                width={220}
+                height={220}
+                className={styles.pixImage}
+              />
+              {pixData.qrCode && (
+                <textarea
+                  className={styles.pixCode}
+                  readOnly
+                  value={pixData.qrCode}
+                  onFocus={(event) => event.currentTarget.select()}
+                />
+              )}
+              {pixData.ticketUrl && (
+                <a
+                  className={styles.pixLink}
+                  href={pixData.ticketUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Abrir instrucao do PIX no Mercado Pago
+                </a>
+              )}
             </article>
           )}
 
